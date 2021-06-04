@@ -16,6 +16,12 @@ class Toggle extends React.Component {
   //    be able to accept `on`, `toggle`, and `children` as props.
   //    Note that they will _not_ have access to Toggle instance properties
   //    like `this.state.on` or `this.toggle`.
+  static On = ({on, children}) => (on ? children : null)
+  static Off = ({on, children}) => (on ? null : children)
+  static Button = ({on, toggle, ...props}) => (
+    <Switch on={on} onClick={toggle} {...props} />
+  )
+
   state = {on: false}
   toggle = () =>
     this.setState(
@@ -33,8 +39,12 @@ class Toggle extends React.Component {
     // 2. React.cloneElement: https://reactjs.org/docs/react-api.html#cloneelement
     //
     // 🐨 you'll want to completely replace the code below with the above logic.
-    const {on} = this.state
-    return <Switch on={on} onClick={this.toggle} />
+    return React.Children.map(this.props.children, (child) =>
+      React.cloneElement(child, {
+        on: this.state.on,
+        toggle: this.toggle,
+      }),
+    )
   }
 }
 
@@ -58,3 +68,70 @@ function Usage({
 Usage.title = 'Compound Components'
 
 export {Toggle, Usage as default}
+
+// // >>> Functional Component
+// const ToggleContext = React.createContext()
+
+// const Toggle = ({onToggle, children}) => {
+//   const [on, setOn] = React.useState(false)
+
+//   const handleToggle = React.useCallback(() => {
+//     setOn((prev) => !prev)
+//   }, [])
+
+//   const contextValue = React.useMemo(
+//     () => ({
+//       on: on,
+//       handleToggle: handleToggle,
+//     }),
+//     [on],
+//   )
+
+//   React.useEffect(() => {
+//     onToggle(on)
+//   }, [on])
+
+//   return (
+//     <ToggleContext.Provider value={contextValue}>
+//       {children}
+//     </ToggleContext.Provider>
+//   )
+// }
+
+// const On = ({children}) => {
+//   const context = React.useContext(ToggleContext)
+//   return context && context.on ? <>{children}</> : null
+// }
+
+// const Off = ({children}) => {
+//   const context = React.useContext(ToggleContext)
+//   return context && !context.on ? <>{children}</> : null
+// }
+
+// const Button = (props) => {
+//   const context = React.useContext(ToggleContext)
+//   return (
+//     context && (
+//       <Switch
+//         on={context.on}
+//         onClick={context.handleToggle}
+//         {...props}
+//       ></Switch>
+//     )
+//   )
+// }
+
+// function Usage({
+//   onToggle = (...args) => console.log('onToggle', ...args),
+// }) {
+//   return (
+//     <Toggle onToggle={onToggle}>
+//       <On>The button is on</On>
+//       <Off>The button is off</Off>
+//       <Button />
+//     </Toggle>
+//   )
+// }
+// Usage.title = 'Compound Components'
+
+// export {Toggle, Usage as default}
